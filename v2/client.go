@@ -1,5 +1,6 @@
 // Package client (v2) is the current official Go client for InfluxDB.
-package client // import "github.com/influxdata/influxdb1-client/v2"
+//package client // import "github.com/influxdata/influxdb1-client/v2"
+package client // import "github.com/snoby/influxdb1-client/v2"
 
 import (
 	"bytes"
@@ -17,8 +18,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/influxdata/influxdb1-client/models"
+	"github.com/snoby/influxdb1-client/models"
 )
+
+type HTTPHeader struct {
+	name  string
+	value string
+}
 
 // HTTPConfig is the config data needed to create an HTTP Client.
 type HTTPConfig struct {
@@ -31,6 +37,9 @@ type HTTPConfig struct {
 
 	// Password is the influxdb password, optional.
 	Password string
+
+	// Cookie Jar to be associated with this  Addr - add to the request header, optional
+	ReqHeaders []HTTPHeader
 
 	// UserAgent is the http User Agent, defaults to "InfluxDBClient".
 	UserAgent string
@@ -120,7 +129,8 @@ func NewHTTPClient(conf HTTPConfig) (Client, error) {
 			Timeout:   conf.Timeout,
 			Transport: tr,
 		},
-		transport: tr,
+		transport:  tr,
+		ReqHeaders: ReqHeaders,
 	}, nil
 }
 
@@ -186,6 +196,7 @@ type client struct {
 	useragent  string
 	httpClient *http.Client
 	transport  *http.Transport
+	ReqHeaders []HTTPHeader
 }
 
 // BatchPoints is an interface into a batched grouping of points to write into
