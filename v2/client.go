@@ -143,13 +143,22 @@ func NewHTTPClient(conf HTTPConfig) (Client, error) {
 	return &c, nil
 }
 
+// addHeader - Helper function for inserting arbitary http headers
+// to the request header
+func addHeader(req *http.Request, reqsToAdd []HTTPHeader) error {
+
+	if len(reqsToAdd) > 0 {
+		for _, v := range reqsToAdd {
+			req.Header.Set(v.Name, v.Value)
+		}
+	}
+	return nil
+}
+
 // Ping will check to see if the server is up with an optional timeout on waiting for leader.
 // Ping returns how long the request took, the version of the server it connected to, and an error if one occurred.
 func (c *client) Ping(timeout time.Duration) (time.Duration, string, error) {
 	now := time.Now()
-
-	fmt.Printf("first  - %v\n", c.ReqHeaders[0])
-	fmt.Printf("second - %v\n", c.ReqHeaders[1])
 
 	u := c.url
 	u.Path = path.Join(u.Path, "ping")
@@ -655,6 +664,9 @@ func (c *client) createDefaultRequest(q Query) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Add any custom headers to the request package
+	addHeader(req, c.ReqHeaders)
 
 	req.Header.Set("Content-Type", "")
 	req.Header.Set("User-Agent", c.useragent)
