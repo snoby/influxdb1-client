@@ -21,9 +21,11 @@ import (
 	"github.com/snoby/influxdb1-client/models"
 )
 
+// HTTPHeader simple structure to hold http
+// key value pairs
 type HTTPHeader struct {
-	name  string
-	value string
+	Name  string
+	Value string
 }
 
 // HTTPConfig is the config data needed to create an HTTP Client.
@@ -120,7 +122,7 @@ func NewHTTPClient(conf HTTPConfig) (Client, error) {
 	if conf.TLSConfig != nil {
 		tr.TLSClientConfig = conf.TLSConfig
 	}
-	return &client{
+	c := client{
 		url:       *u,
 		username:  conf.Username,
 		password:  conf.Password,
@@ -130,14 +132,24 @@ func NewHTTPClient(conf HTTPConfig) (Client, error) {
 			Transport: tr,
 		},
 		transport:  tr,
-		ReqHeaders: ReqHeaders,
-	}, nil
+		ReqHeaders: conf.ReqHeaders,
+	}
+	if len(conf.ReqHeaders) > 0 {
+		fmt.Println("Found HTTP headers in config")
+		c.ReqHeaders = make([]HTTPHeader, len(conf.ReqHeaders))
+		copy(c.ReqHeaders, conf.ReqHeaders)
+	}
+
+	return &c, nil
 }
 
 // Ping will check to see if the server is up with an optional timeout on waiting for leader.
 // Ping returns how long the request took, the version of the server it connected to, and an error if one occurred.
 func (c *client) Ping(timeout time.Duration) (time.Duration, string, error) {
 	now := time.Now()
+
+	fmt.Printf("first  - %v\n", c.ReqHeaders[0])
+	fmt.Printf("second - %v\n", c.ReqHeaders[1])
 
 	u := c.url
 	u.Path = path.Join(u.Path, "ping")
